@@ -2,7 +2,8 @@ version: 0.2
 phases:
   install:
     commands:
-      - npm install -g aws-sam-cli
+      - brew tap aws/tap
+      - brew install aws-sam-cli
   build:
     commands:
       - sam build
