@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Template SAM básico para una función Lambda Hello World
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: . # Folder of where the Lambda code is located
+      Handler: index.js #
+      Runtime: nodejs20.x # Node version
+      Architectures:
+        - x86_64
+      Events:
+        cicdpoc: # Definimos el API Gateway, se crea una nueva API
+          Type: Api
+          Properties:
+            Path: /hello # Ruta HTTP
+            Method: get # Método HTTP
+
+Outputs:
+  cicdpocUrl:
+    Description: "URL de API Gateway"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
