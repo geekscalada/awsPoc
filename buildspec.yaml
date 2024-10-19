@@ -3,17 +3,16 @@ version: 0.2
 phases:
   install:
     commands:
-      - curl -Lo sam-installation https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
-      - unzip sam-installation -d sam-cli
-      # Crear un directorio temporal para instalar SAM CLI
-      - mkdir -p /tmp/sam-cli
-      # Instalar SAM CLI en el directorio temporal
-      - ./sam-cli/install --install-dir /tmp/sam-cli
+      - pip install aws-sam-cli --user
   build:
     commands:
-      # Usar el SAM CLI desde el directorio temporal
-      - /tmp/sam-cli/sam build
-      - /tmp/sam-cli/sam package --output-template-file packaged.yaml --s3-bucket lambdapoc-ci-cd-artifacts
+      # Añadir SAM CLI al PATH
+      - export PATH=$PATH:/root/.local/bin
+      # Verificar que SAM CLI está instalado correctamente
+      - sam --version
+      # Ejecutar el build con SAM CLI
+      - sam build
+      - sam package --output-template-file packaged.yaml --s3-bucket lambdapoc-ci-cd-artifacts
 
 artifacts:
   files:
