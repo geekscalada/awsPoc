@@ -2,8 +2,9 @@ version: 0.2
 phases:
   install:
     commands:
-      - brew tap aws/tap
-      - brew install aws-sam-cli
+      - curl -Lo sam-installation https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
+      - unzip sam-installation -d sam-cli
+      - sudo ./sam-cli/install
   build:
     commands:
       - sam build
