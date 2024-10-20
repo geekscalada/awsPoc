@@ -6,8 +6,8 @@ export const handler = async (event) => {
   const params = {
     TableName: "Users",
     Item: {
-      userId: "123", // Aquí puedes usar un valor dinámico
-      name: "John Doe",
+      userId: "1234", // Aquí puedes usar un valor dinámico
+      name: "John Does",
     },
   };
 
