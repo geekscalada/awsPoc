@@ -20,7 +20,7 @@ export const handler = async (event) => {
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Could not add userrr" }),
+      body: JSON.stringify({ error: "Could not add userrrr" }),
     };
   }
 };
