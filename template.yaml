@@ -8,7 +8,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: . # Folder of where the Lambda code is located
-      Handler: index.js #
+      Handler: index.handler #
       Runtime: nodejs20.x # Node version
       Architectures:
         - x86_64
