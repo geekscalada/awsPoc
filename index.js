@@ -1,6 +1,6 @@
-import { DynamoDB } from "aws-sdk";
+import AWS from "aws-sdk";
 
-const dynamoDb = new DynamoDB.DocumentClient();
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event) => {
   const params = {
