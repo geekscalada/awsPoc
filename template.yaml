@@ -1,28 +1,81 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Template SAM básico para una función Lambda Hello World
+  Basic SAM template for a WebSocket API with Lambda functions
 
 Resources:
-  HelloWorldFunction:
+  # This defines the WebSocket API in API Gateway
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: WebSocketAPI
+      ProtocolType: WEBSOCKET  # Specifies that this is a WebSocket API
+      RouteSelectionExpression: "$request.body.action"  # Defines how to select routes from the incoming message
+
+  # This defines the route for the $connect event (when a client connects)
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi  # References the WebSocket API created above
+      RouteKey: $connect  # Specifies that this route is for the $connect event
+      Target: !Join
+        - /
+        - - integrations  # Specifies the integration with the Lambda function
+          - !Ref ConnectIntegration  # References the integration with the Lambda function
+
+  # This defines the integration between the $connect route and the Lambda function
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi  # References the WebSocket API
+      IntegrationType: AWS_PROXY  # Uses AWS Proxy integration with the Lambda function
+      IntegrationUri: !GetAtt ConnectLambdaFunction.Arn  # Specifies the ARN of the Lambda function to integrate
+      PayloadFormatVersion: 1.0  # Sets the format for the payload
+
+  # This defines the Lambda function that handles the $connect event
+  ConnectLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: CICDfunction
-      CodeUri: . # Folder of where the Lambda code is located
-      Handler: index.handler #
-      Runtime: nodejs20.x # Node version
+      FunctionName: CICDConnectFunction  # Name of the Lambda function
+      CodeUri: .  # Location of the Lambda code
+      Handler: index.handler  # Entry point of the Lambda function
+      Runtime: nodejs20.x  # Node.js runtime version
       Architectures:
-        - x86_64
-      # Role: arn:aws:iam::aws:policy/AWSLambda_FullAccess # You can use your own policy instead of SAM creates a new one
-      Events:
-        cicdpoc: # Definimos el API Gateway, se crea una nueva API
-          Type: Api
-          Properties:
-            Name: CICDAPI
-            Path: /hello # Ruta HTTP
-            Method: get # Método HTTP
+        - x86_64  # Architecture of the Lambda function
+
+  # This defines the route for the $disconnect event (when a client disconnects)
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi  # References the WebSocket API created above
+      RouteKey: $disconnect  # Specifies that this route is for the $disconnect event
+      Target: !Join
+        - /
+        - - integrations  # Specifies the integration with the Lambda function
+          - !Ref DisconnectIntegration  # References the integration with the Lambda function
+
+  # This defines the integration between the $disconnect route and the Lambda function
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi  # References the WebSocket API
+      IntegrationType: AWS_PROXY  # Uses AWS Proxy integration with the Lambda function
+      IntegrationUri: !GetAtt DisconnectLambdaFunction.Arn  # Specifies the ARN of the Lambda function to integrate
+      PayloadFormatVersion: 1.0  # Sets the format for the payload
+
+  # This defines the Lambda function that handles the $disconnect event
+  DisconnectLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: CICDDisconnectFunction  # Name of the Lambda function
+      CodeUri: .  # Location of the Lambda code
+      Handler: index.handler  # Entry point of the Lambda function
+      Runtime: nodejs20.x  # Node.js runtime version
+      Architectures:
+        - x86_64  # Architecture of the Lambda function
 
 Outputs:
-  cicdpocUrl:
-    Description: "URL de API Gateway"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  # Outputs the WebSocket API URL for later reference
+  WebSocketApiUrl:
+    Description: "WebSocket API URL"
+    Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
