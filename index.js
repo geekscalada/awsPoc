@@ -2,25 +2,21 @@ import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-export const handler = async (event) => {
-  const params = {
-    TableName: "Users",
-    Item: {
-      userId: "1234", // Aquí puedes usar un valor dinámico
-      name: "John Does",
-    },
-  };
 
-  try {
-    await dynamoDb.put(params).promise();
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: "User added!" }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Could not add userrrr" }),
-    };
+export const handler = async (event) => {
+  const { eventType } = event.requestContext;
+
+  if (eventType === 'CONNECT') {
+    // Handle $connect event
+    console.log("Client connected", event.requestContext.connectionId);
+    // You can store the connectionId in a database if needed
+  } else if (eventType === 'DISCONNECT') {
+    // Handle $disconnect event
+    console.log("Client disconnected", event.requestContext.connectionId);
+    // Cleanup resources or remove the connectionId from a database
   }
+
+  return {
+    statusCode: 200
+  };
 };

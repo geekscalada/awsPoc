@@ -1,81 +1,57 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Basic SAM template for a WebSocket API with Lambda functions
+  SAM template for WebSocket API with a single Lambda
 
 Resources:
-  # This defines the WebSocket API in API Gateway
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
       Name: WebSocketAPI
-      ProtocolType: WEBSOCKET  # Specifies that this is a WebSocket API
-      RouteSelectionExpression: "$request.body.action"  # Defines how to select routes from the incoming message
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
 
-  # This defines the route for the $connect event (when a client connects)
+  # Route for $connect event, handled by a single Lambda function
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
-      ApiId: !Ref WebSocketApi  # References the WebSocket API created above
-      RouteKey: $connect  # Specifies that this route is for the $connect event
+      ApiId: !Ref WebSocketApi
+      RouteKey: $connect
       Target: !Join
         - /
-        - - integrations  # Specifies the integration with the Lambda function
-          - !Ref ConnectIntegration  # References the integration with the Lambda function
+        - - integrations
+          - !Ref WebSocketIntegration
 
-  # This defines the integration between the $connect route and the Lambda function
-  ConnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi  # References the WebSocket API
-      IntegrationType: AWS_PROXY  # Uses AWS Proxy integration with the Lambda function
-      IntegrationUri: !GetAtt ConnectLambdaFunction.Arn  # Specifies the ARN of the Lambda function to integrate
-      PayloadFormatVersion: 1.0  # Sets the format for the payload
-
-  # This defines the Lambda function that handles the $connect event
-  ConnectLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: CICDConnectFunction  # Name of the Lambda function
-      CodeUri: .  # Location of the Lambda code
-      Handler: index.handler  # Entry point of the Lambda function
-      Runtime: nodejs20.x  # Node.js runtime version
-      Architectures:
-        - x86_64  # Architecture of the Lambda function
-
-  # This defines the route for the $disconnect event (when a client disconnects)
+  # Route for $disconnect event, handled by the same Lambda function
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
-      ApiId: !Ref WebSocketApi  # References the WebSocket API created above
-      RouteKey: $disconnect  # Specifies that this route is for the $disconnect event
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
       Target: !Join
         - /
-        - - integrations  # Specifies the integration with the Lambda function
-          - !Ref DisconnectIntegration  # References the integration with the Lambda function
+        - - integrations
+          - !Ref WebSocketIntegration
 
-  # This defines the integration between the $disconnect route and the Lambda function
-  DisconnectIntegration:
+  WebSocketIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
-      ApiId: !Ref WebSocketApi  # References the WebSocket API
-      IntegrationType: AWS_PROXY  # Uses AWS Proxy integration with the Lambda function
-      IntegrationUri: !GetAtt DisconnectLambdaFunction.Arn  # Specifies the ARN of the Lambda function to integrate
-      PayloadFormatVersion: 1.0  # Sets the format for the payload
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt WebSocketLambdaFunction.Arn
+      PayloadFormatVersion: 1.0
 
-  # This defines the Lambda function that handles the $disconnect event
-  DisconnectLambdaFunction:
+  WebSocketLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: CICDDisconnectFunction  # Name of the Lambda function
-      CodeUri: .  # Location of the Lambda code
-      Handler: index.handler  # Entry point of the Lambda function
-      Runtime: nodejs20.x  # Node.js runtime version
+      FunctionName: WebSocketHandler
+      CodeUri: .
+      Handler: index.handler
+      Runtime: nodejs20.x
       Architectures:
-        - x86_64  # Architecture of the Lambda function
+        - x86_64
 
 Outputs:
-  # Outputs the WebSocket API URL for later reference
   WebSocketApiUrl:
     Description: "WebSocket API URL"
     Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
