@@ -5,7 +5,7 @@ import AWS from "aws-sdk";
 
 export const handler = async (event) => {
 
-  console.log("*************************************************LAMBDA")
+  console.log("********************************************LAMBDA")
 
   const { eventType } = event.requestContext;
 
