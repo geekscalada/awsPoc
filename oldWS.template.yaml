@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM template for WebSocket API with a single Lambda using lambdaFullAccess role
+
+Resources:
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: WebSocketAPI
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: Prod
+      AutoDeploy: true
+
+  # Route for $connect event, handled by a single Lambda function
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $connect
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref WebSocketIntegration
+
+  # Route for $disconnect event, handled by the same Lambda function
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref WebSocketIntegration
+
+  WebSocketIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt WebSocketLambdaFunction.Arn
+      PayloadFormatVersion: 1.0
+
+  WebSocketLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: WebSocketHandler
+      CodeUri: . # Ruta al código Lambda
+      Handler: index.handler # El manejador de la Lambda
+      Runtime: nodejs20.x # Versión de Node.js
+      Architectures:
+        - x86_64
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess # Asignar el rol de IAM a la Lambda
+
+Outputs:
+  WebSocketApiUrl:
+    Description: "WebSocket API URL"
+    Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"

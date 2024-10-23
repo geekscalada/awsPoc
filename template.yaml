@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  SAM template for WebSocket API with a single Lambda using lambdaFullAccess role
+  SAM template for WebSocket API with proper Lambda integration and permissions
 
 Resources:
   WebSocketApi:
@@ -18,46 +18,57 @@ Resources:
       StageName: Prod
       AutoDeploy: true
 
-  # Route for $connect event, handled by a single Lambda function
+  # Route for $connect event, correctly integrated with a Lambda function
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
       RouteKey: $connect
       Target: !Join
-        - /
-        - - integrations
-          - !Ref WebSocketIntegration
+        - integrations
+        - !Ref WebSocketIntegration
 
-  # Route for $disconnect event, handled by the same Lambda function
+  # Route for $disconnect event, correctly integrated with the same Lambda function
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
       RouteKey: $disconnect
       Target: !Join
-        - /
-        - - integrations
-          - !Ref WebSocketIntegration
+        - integrations
+        - !Ref WebSocketIntegration
 
+  # Define the correct Lambda proxy integration for the API Gateway
   WebSocketIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketApi
       IntegrationType: AWS_PROXY
-      IntegrationUri: !GetAtt WebSocketLambdaFunction.Arn
-      PayloadFormatVersion: 1.0
+      IntegrationUri: !Sub
+        - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations
+        - LambdaFunctionArn: !GetAtt WebSocketLambdaFunction.Arn
+      PayloadFormatVersion: "1.0"
 
+  # Lambda function to handle the WebSocket connection and disconnection
   WebSocketLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: WebSocketHandler
-      CodeUri: . # Ruta al código Lambda
-      Handler: index.handler # El manejador de la Lambda
+      CodeUri: . # Ruta a tu código Lambda
+      Handler: index.handler # Tu manejador
       Runtime: nodejs20.x # Versión de Node.js
       Architectures:
         - x86_64
-      Role: arn:aws:iam::948355107336:role/lambdaFullAccess # Asignar el rol de IAM a la Lambda
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess # El rol que mencionaste
+
+  # Permission for API Gateway to invoke the Lambda function
+  ApiGatewayInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WebSocketLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi.ApiId}/*"
 
 Outputs:
   WebSocketApiUrl:
