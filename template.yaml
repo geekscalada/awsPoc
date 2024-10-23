@@ -59,7 +59,7 @@ Resources:
       Runtime: nodejs20.x # Versión de Node.js
       Architectures:
         - x86_64
-      Role: arn:aws:iam::948355107336:role/lambdaFullAccess # El rol que mencionaste
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess 
 
   # Permission for API Gateway to invoke the Lambda function
   ApiGatewayInvokePermission:
