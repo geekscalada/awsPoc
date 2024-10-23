@@ -2,18 +2,24 @@ version: 0.2
 
 phases:
   install:
+    runtime-versions:
+      nodejs: 20
     commands:
-      - pip install aws-sam-cli --user
+      - echo Installing dependencies...
+      - npm install
+
   build:
     commands:
-      # Añadir SAM CLI al PATH
-      - export PATH=$PATH:/root/.local/bin
-      # Verificar que SAM CLI está instalado correctamente
-      - sam --version
-      # Ejecutar el build con SAM CLI
-      - sam build
-      - sam package --output-template-file packaged.yaml --s3-bucket lambdapoc-ci-cd-artifacts
+      - echo Zipping Lambda function...
+      - zip -r lambdaWS2.zip .
+
+  post_build:
+    commands:
+      - echo Packaging and deploying CloudFormation stack...
+      - aws cloudformation package --template-file template.yaml --s3-bucket your-code-s3-bucket --output-template-file packaged.yaml
+      - aws cloudformation deploy --template-file packaged.yaml --stack-name pipelinePruebas --capabilities CAPABILITY_IAM
 
 artifacts:
   files:
-    - packaged.yaml
+    - lambdaWS2.zip
+    - template.yaml

@@ -1,28 +1,38 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
-Description: >
-  Template SAM básico para una función Lambda Hello World role vs no-role4
-
+AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function
+  LambdaWS2Function:
+    Type: AWS::Lambda::Function
+    Properties: 
+      FunctionName: lambdaWS2
+      Handler: index.handler
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Sub "your-code-s3-bucket"
+        S3Key: "lambdaWS2.zip"
+  
+  WebSocketAPI:
+    Type: AWS::ApiGatewayV2::Api
     Properties:
-      FunctionName: CICDfunction
-      CodeUri: . # Folder of where the Lambda code is located
-      Handler: index.handler #
-      Runtime: nodejs20.x # Node version
-      Architectures:
-        - x86_64
-      # Role: arn:aws:iam::948355107336:role/lambdaFullAccess # You can use your own policy instead of SAM creates a new one
-      Events:
-        cicdpoc: # Definimos el API Gateway, se crea una nueva API
-          Type: Api
-          Properties:
-            Name: CICDAPI
-            Path: /hello # Ruta HTTP
-            Method: get # Método HTTP
+      Name: v2
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+  
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      StageName: v2
+      AutoDeploy: true
+
+  WebSocketLambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaWS2Function.Arn}/invocations
 
 Outputs:
-  cicdpocUrl:
-    Description: "URL de API Gateway"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  WebSocketApiUrl:
+    Description: "The WebSocket API URL"
+    Value: !Sub "wss://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/v2/"
