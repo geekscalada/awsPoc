@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  SAM template for WebSocket API with a single Lambda
+  SAM template for WebSocket API with a single Lambda using lambdaFullAccess role
 
 Resources:
   WebSocketApi:
@@ -57,8 +57,7 @@ Resources:
       Runtime: nodejs20.x # Versión de Node.js
       Architectures:
         - x86_64
-      Policies:
-        - AWSLambdaBasicExecutionRole # Permisos básicos para escribir logs en CloudWatch
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess # Asignar el rol de IAM a la Lambda
 
 Outputs:
   WebSocketApiUrl:
