@@ -5,7 +5,7 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event) => {
 
-  console.log("**************************************************LAMBDA")
+  console.log("*************************************************LAMBDA")
 
   const { eventType } = event.requestContext;
 
