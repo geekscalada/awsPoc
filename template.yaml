@@ -11,6 +11,13 @@ Resources:
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
 
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: Prod
+      AutoDeploy: true
+
   # Route for $connect event, handled by a single Lambda function
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
