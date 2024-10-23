@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LambdaWS2Function:
+    Type: AWS::Lambda::Function
+    Properties: 
+      FunctionName: lambdaWS2
+      Handler: index.handler
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess
+      Runtime: nodejs20.x
+      Code:
+        S3Bucket: !Ref WS2Bucket
+        S3Key: "lambdaWS2.zip"
+  
+  WebSocketAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: v2
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+  
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      StageName: v2
+      AutoDeploy: true
+
+  WebSocketLambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaWS2Function.Arn}/invocations
+
+  # Aquí se define el S3 bucket que será creado automáticamente
+  WS2Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ws2bucket
+
+Outputs:
+  WebSocketApiUrl:
+    Description: "The WebSocket API URL"
+    Value: !Sub "wss://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/v2/"
