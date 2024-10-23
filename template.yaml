@@ -52,11 +52,13 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: WebSocketHandler
-      CodeUri: .
-      Handler: index.handler
-      Runtime: nodejs20.x
+      CodeUri: . # Ruta al código Lambda
+      Handler: index.handler # El manejador de la Lambda
+      Runtime: nodejs20.x # Versión de Node.js
       Architectures:
         - x86_64
+      Policies:
+        - AWSLambdaBasicExecutionRole # Permisos básicos para escribir logs en CloudWatch
 
 Outputs:
   WebSocketApiUrl:
