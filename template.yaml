@@ -13,7 +13,7 @@ Resources:
       Runtime: nodejs20.x # Node version
       Architectures:
         - x86_64
-      # Role: arn:aws:iam::aws:policy/AWSLambda_FullAccess # You can use your own policy instead of SAM creates a new one
+      Role: arn:aws:iam::948355107336:role/lambdaFullAccess # You can use your own policy instead of SAM creates a new one
       Events:
         cicdpoc: # Definimos el API Gateway, se crea una nueva API
           Type: Api
