@@ -1,14 +1,19 @@
-AWSTemplateFormatVersion: '2010-09-09'
 Resources:
+  WS2Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ws2bucket
+
   LambdaWS2Function:
     Type: AWS::Lambda::Function
+    DependsOn: WS2Bucket  # Esto asegura que el bucket se cree antes que la Lambda
     Properties: 
       FunctionName: lambdaWS2
       Handler: index.handler
       Role: arn:aws:iam::948355107336:role/lambdaFullAccess
       Runtime: nodejs20.x
       Code:
-        S3Bucket: !Sub "your-code-s3-bucket"
+        S3Bucket: !Ref WS2Bucket  # Referencia al bucket creado en el mismo template
         S3Key: "lambdaWS2.zip"
   
   WebSocketAPI:
